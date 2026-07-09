@@ -37,7 +37,7 @@ export default function Home() {
       id: 'welcome',
       role: 'assistant',
       content:
-        '你好呀！我是济大四的学长，欢迎来到济南大学！有什么关于入学的问题都可以问我，报到流程、宿舍、军训、选课、食堂……我都能帮你解答~',
+        '你好呀！我是小诺学姐，欢迎来到济南大学！有什么关于入学的问题都可以问我，也可以加入济南大学新生群112904711，报到流程、宿舍、军训、选课、食堂……我都能帮你解答~',
       timestamp: Date.now(),
     },
   ]);
@@ -173,10 +173,10 @@ export default function Home() {
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-semibold text-[#2C3E50] leading-tight">
-              济大新生答疑助手
+              小诺学姐 · 新生答疑
             </h1>
             <p className="text-xs text-[#7F8C9B] leading-tight mt-0.5">
-              大四学长在线，有问必答
+              济南大学2026新生专属助手
             </p>
           </div>
           <div className="flex items-center gap-1.5">
@@ -204,7 +204,7 @@ export default function Home() {
                     : 'bg-[#4A90D9] text-white'
                 }`}
               >
-                {message.role === 'user' ? '我' : '学长'}
+                {message.role === 'user' ? '我' : '诺'}
               </div>
 
               {/* Bubble */}
