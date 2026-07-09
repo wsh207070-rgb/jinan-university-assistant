@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
     async start(controller) {
       try {
         const llmStream = client.stream(llmMessages, {
-          model: 'doubao-seed-2-0-lite-260215',
+          model: 'deepseek-v3-2-251201',
           temperature: 0.7,
         });
 
