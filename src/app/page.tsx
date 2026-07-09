@@ -168,8 +168,8 @@ export default function Home() {
       {/* Header */}
       <header className="flex-shrink-0 bg-white border-b border-gray-100 px-4 py-3 shadow-sm">
         <div className="max-w-[720px] mx-auto flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#4A90D9] flex items-center justify-center text-white font-semibold text-sm">
-            济
+          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+            <img src="/avatar.jpg" alt="小诺学姐" className="w-full h-full object-cover" />
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-semibold text-[#2C3E50] leading-tight">
@@ -197,15 +197,15 @@ export default function Home() {
               }`}
             >
               {/* Avatar */}
-              <div
-                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-                  message.role === 'user'
-                    ? 'bg-[#E8F4FD] text-[#4A90D9]'
-                    : 'bg-[#4A90D9] text-white'
-                }`}
-              >
-                {message.role === 'user' ? '我' : '诺'}
-              </div>
+              {message.role === 'user' ? (
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#E8F4FD] flex items-center justify-center text-xs font-medium text-[#4A90D9]">
+                  我
+                </div>
+              ) : (
+                <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden">
+                  <img src="/avatar.jpg" alt="小诺学姐" className="w-full h-full object-cover" />
+                </div>
+              )}
 
               {/* Bubble */}
               <div
