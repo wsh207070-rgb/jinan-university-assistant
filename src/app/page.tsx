@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface Message {
   id: string;
@@ -43,6 +44,7 @@ export default function Home() {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -179,9 +181,24 @@ export default function Home() {
               济南大学2026新生专属助手
             </p>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#52C4A0] animate-pulse"></span>
             <span className="text-xs text-[#7F8C9B]">在线</span>
+            <button
+              onClick={() => setShowQR(true)}
+              className="ml-1 p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+              title="分享二维码"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7F8C9B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+                <rect x="14" y="14" width="3" height="3"></rect>
+                <rect x="18" y="14" width="3" height="3"></rect>
+                <rect x="14" y="18" width="3" height="3"></rect>
+                <rect x="18" y="18" width="3" height="3"></rect>
+              </svg>
+            </button>
           </div>
         </div>
       </header>
@@ -308,6 +325,53 @@ export default function Home() {
           </p>
         </div>
       </footer>
+
+      {/* QR Code Modal */}
+      {showQR && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-[fadeIn_0.2s_ease-out]"
+          onClick={() => setShowQR(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl animate-[fadeInUp_0.2s_ease-out]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-[#2C3E50]">分享二维码</h3>
+              <button
+                onClick={() => setShowQR(false)}
+                className="p-1 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7F8C9B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="bg-white p-3 rounded-xl border border-gray-100">
+                <QRCodeSVG
+                  value={typeof window !== 'undefined' ? window.location.href : ''}
+                  size={200}
+                  level="M"
+                  includeMargin={false}
+                />
+              </div>
+              <p className="text-xs text-[#7F8C9B] mt-4 text-center">
+                扫描二维码，直接访问小诺学姐答疑助手
+              </p>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                }}
+                className="mt-3 px-4 py-2 text-sm rounded-full bg-[#4A90D9] text-white hover:bg-[#3A7BC8] transition-colors cursor-pointer"
+              >
+                复制链接
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
