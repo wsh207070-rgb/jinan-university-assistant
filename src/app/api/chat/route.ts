@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-import { LLMClient, Config, HeaderUtils } from 'coze-coding-dev-sdk';
 
 const SYSTEM_PROMPT = `你是济南大学2026新生答疑助手，名叫【小诺学姐】，是济南大学的一名学姐，负责为2026届新生介绍济南大学。
 
@@ -144,9 +143,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const customHeaders = HeaderUtils.extractForwardHeaders(request.headers);
-  const config = new Config();
-  const client = new LLMClient(config, customHeaders);
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({ error: '未配置 DeepSeek API Key' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
 
   const llmMessages = [
     { role: 'system' as const, content: SYSTEM_PROMPT },
@@ -160,22 +163,73 @@ export async function POST(request: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const llmStream = client.stream(llmMessages, {
-          model: 'deepseek-v3-2-251201',
-          temperature: 0.7,
+        const response = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: llmMessages,
+            stream: true,
+            temperature: 0.7,
+          }),
         });
 
-        for await (const chunk of llmStream) {
-          if (chunk.content) {
-            const data = JSON.stringify({ content: chunk.content.toString() });
-            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('DeepSeek API error:', response.status, errorText);
+          const errorData = JSON.stringify({
+            content: '抱歉，服务暂时出了点问题，请稍后再试~',
+          });
+          controller.enqueue(encoder.encode(`data: ${errorData}\n\n`));
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          controller.close();
+          return;
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('无法读取响应流');
+        }
+
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const text = decoder.decode(value, { stream: true });
+          const lines = text.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                controller.close();
+                return;
+              }
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  controller.enqueue(
+                    encoder.encode(`data: ${JSON.stringify({ content })}\n\n`)
+                  );
+                }
+              } catch {
+                // skip invalid JSON
+              }
+            }
           }
         }
 
         controller.enqueue(encoder.encode('data: [DONE]\n\n'));
         controller.close();
       } catch (error) {
-        console.error('LLM streaming error:', error);
+        console.error('Streaming error:', error);
         try {
           const errorData = JSON.stringify({
             content: '抱歉，服务暂时出了点问题，请稍后再试~',
@@ -184,7 +238,7 @@ export async function POST(request: NextRequest) {
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
           controller.close();
         } catch {
-          // Controller already closed, client disconnected
+          // Controller already closed
         }
       }
     },
